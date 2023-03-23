@@ -30,6 +30,6 @@
 
     public enum Outcome_e
     {
-        WIN, DRAW_50, DRAW_STALEMATE, DRAW_INS, DRAW_3, LOSE
+        WIN_C, WIN_TO, DRAW_50, DRAW_STALEMATE, DRAW_INS, DRAW_3, DRAW_TO_INS, LOSE_C, LOSE_TO
     }
 }

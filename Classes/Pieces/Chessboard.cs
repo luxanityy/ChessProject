@@ -2,7 +2,7 @@
 
 using Chess.Common;
 using Pieces;
-
+using System.Timers;
 
 
 public class Chessboard {
@@ -26,9 +26,13 @@ public class Chessboard {
 	private bool[] castleSuccess;
 	private int draw50rule;
 	private int[] pieceCounter;
+	private int whiteTimer;
+	private int blackTimer;
+	private int timerIncr;
+	private System.Timers.Timer timer;
 	List<Position> positionQ;
 
-	public Chessboard() {
+	public Chessboard(int initTime, int incrTime) {
 		tileMatrix = new ChessTile[8,8];
 		whiteToMove = true;
 		this.gameOver = false;
@@ -98,9 +102,58 @@ public class Chessboard {
 		wlrook = tileMatrix[7,0].getPiece();
 		bsrook = tileMatrix[0,7].getPiece();
 		blrook = tileMatrix[0,0].getPiece();
+		whiteTimer = initTime*10;
+        blackTimer = initTime*10;
+		timerIncr = incrTime*10;
+        timer = new System.Timers.Timer(100);
+        timer.Elapsed += OnTimedEvent;
+    }
+
+	void OnTimedEvent(object source, ElapsedEventArgs e)
+	{
+        // Check whose turn it is.
+        Console.WriteLine("Black: " + blackTimer);
+        if (whiteToMove)
+		{
+            whiteTimer--;
+		}
+		else
+		{
+			blackTimer--;
+        }
+
+		if (whiteTimer <= 0)
+		{
+			timer.Enabled = false;
+			if ((pieceCounter[5] == 0) && (pieceCounter[8] == 0) && (pieceCounter[9] == 0) && (pieceCounter[6] + pieceCounter[7] < 2))
+			{
+				outcome = Outcome_e.DRAW_TO_INS;
+			}
+			else
+			{
+				outcome = Outcome_e.LOSE_TO;
+			}
+			gameOver = true;
+			return;
+		}
+
+		if (blackTimer <=0)
+		{
+            timer.Enabled = false;
+            if ((pieceCounter[0] == 0) && (pieceCounter[3] == 0) && (pieceCounter[4] == 0) && (pieceCounter[1] + pieceCounter[2] < 2))
+            {
+                outcome = Outcome_e.DRAW_TO_INS;
+            }
+            else
+            {
+                outcome = Outcome_e.WIN_TO;
+            }
+            gameOver = true;
+            return;
+        }
 	}
 
-	public int[] parseMove(string move) {
+        public int[] parseMove(string move) {
 		int[] parsed = new int[4];
 		parsed[0] = 8 - (move[1] - '0');
 		parsed[1] = move[0] - 'a';
@@ -212,7 +265,7 @@ public class Chessboard {
 			if (isCheck == 2) {
 				if (!canKingMove(enemyKing)) {
 					gameOver = true;
-					outcome = (p1.white) ? Outcome_e.WIN : Outcome_e.LOSE;
+					outcome = (p1.white) ? Outcome_e.WIN_C : Outcome_e.LOSE_C;
 					return true;
 				}
 			}
@@ -221,7 +274,7 @@ public class Chessboard {
 				if (!canBlockCheckOrTake(!attacker.white, attacker.inPath(enemyKing.tile), attacker)
 						&& !canKingMove(enemyKing)) {
 					gameOver = true;
-					outcome = (p1.white) ? Outcome_e.WIN : Outcome_e.LOSE;
+					outcome = (p1.white) ? Outcome_e.WIN_C : Outcome_e.LOSE_C;
 					return true;
 				}
 			}
@@ -286,7 +339,16 @@ public class Chessboard {
 			}
 		}
 
-		whiteToMove = !whiteToMove;
+		if (whiteToMove)
+		{
+			whiteTimer += timerIncr;
+		} else
+		{
+            blackTimer += timerIncr;
+        }
+        timer.Enabled = true;
+
+        whiteToMove = !whiteToMove;
 		return true;
 	}
 
@@ -488,7 +550,10 @@ public class Chessboard {
 		for (int i = 0; i < 8; i++) {
 			for (int j = 0; j < 8; j++) {
 				if (king.canMove(tileMatrix[i,j])) {
-					return true;
+					if (moveIfLegal(king.tile.r, king.tile.c,i,j,true,"Q"))
+					{
+                        return true;
+                    }		
 				}
 			}
 		}

@@ -8,7 +8,7 @@
 @if (GameOver)
 {
     <div class="text-placeholder">GAME OVER
-        @if(Board.GetOutcome() == Outcome_e.WIN)
+            @if (Board.GetOutcome() == Outcome_e.WIN_C || Board.GetOutcome() == Outcome_e.WIN_TO)
         {
             <div class="outcome">WHITE WON</div>
         }
@@ -17,7 +17,7 @@
         {
             <div class="outcome">DRAW</div>
         }
-        else if(Board.GetOutcome() == Outcome_e.LOSE)
+            else if (Board.GetOutcome() == Outcome_e.LOSE_C || Board.GetOutcome() == Outcome_e.LOSE_TO)
         {
                 <div class="outcome">BLACK WON</div>
         }

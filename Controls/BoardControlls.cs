@@ -6,7 +6,8 @@ using System.Diagnostics;
 namespace Chess.Controls
 {
     // TODO: show last move
-    // TODO: timers
+    // TODO: Implement UI for timers
+    // TODO: Implement menu to choose time control
     public partial class BoardControlls : ComponentBase
     {
         public bool PromotionModalWhiteVisible { get; set; } = false;
@@ -14,15 +15,11 @@ namespace Chess.Controls
         public bool PromotionModalBlackVisible { get; set; } = false;
 
         public bool[,] ValidMoves = new bool[8, 8];
-        System.Timers.Timer timer = new System.Timers.Timer(30000);
 
         public bool GameOver { get; set; } = false;
         public BoardControlls()
         {
             NewGame();
-            timer.Elapsed += Test;
-            timer.Enabled = true;
-            timer.Start();
         }
         private static void Test(object sender, EventArgs e)
         {
@@ -30,7 +27,7 @@ namespace Chess.Controls
         }
         public void NewGame()
         {
-            Board = new();
+            Board = new(600, 5);
             GameOver = false;
         }
 
@@ -86,7 +83,6 @@ namespace Chess.Controls
         char[] parsed = new char[4];
         public async Task MovePieceAsync(int row, int col)
         {
-            Console.WriteLine(timer.Interval);
 
             if (_move.Length == 4)
             { 
