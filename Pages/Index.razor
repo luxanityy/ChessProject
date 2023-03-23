@@ -1,0 +1,58 @@
+﻿@page "/"
+@inherits Chess.Controls.BoardControlls
+
+<div class="new-game">
+    <button class="new-game-button" onclick="@(()=>NewGame())">NEW GAME</button>
+</div>
+<div class ="game-over">
+@if (GameOver)
+{
+    <div class="text-placeholder">GAME OVER
+        @if(Board.GetOutcome() == Outcome_e.WIN)
+        {
+            <div class="outcome">WHITE WON</div>
+        }
+        else if(Board.GetOutcome() == Outcome_e.DRAW_3 || Board.GetOutcome() == Outcome_e.DRAW_STALEMATE || 
+                Board.GetOutcome() == Outcome_e.DRAW_INS || Board.GetOutcome() == Outcome_e.DRAW_50)
+        {
+            <div class="outcome">DRAW</div>
+        }
+        else if(Board.GetOutcome() == Outcome_e.LOSE)
+        {
+                <div class="outcome">BLACK WON</div>
+        }
+        </div>
+}
+</div>
+<div class="chess-board">
+    @if(PromotionModalWhiteVisible)
+    {
+        <div class="promote-popup-white">
+            <div class="chess-square dark WhiteQueen" onclick="@(() => PromotePiece(PromotionSelection.Queen))"></div>
+            <div class="chess-square light WhiteRook" onclick="@(() => PromotePiece(PromotionSelection.Rook))"></div>
+            <div class="chess-square dark WhiteBishop" onclick="@(() => PromotePiece(PromotionSelection.Bishop))"></div>
+            <div class="chess-square light WhiteKnight" onclick="@(() => PromotePiece(PromotionSelection.Knight))"></div>
+        </div>
+    }
+    @foreach (var row in Enumerable.Range(0, 8))
+    {
+        <div class="chess-row">
+            
+            @foreach (var col in Enumerable.Range(0, 8))
+            {
+                <div class="chess-square @GetTileClass(row,col)" onclick="@(() => MovePieceAsync(row,col))" @oncontextmenu="(()=> HandleRightClick(row,col))" @oncontextmenu:preventDefault="true">
+                    <div class="@GetValidMoves(row,col)"></div>
+                </div>
+            }
+        </div>
+    }
+    @if(PromotionModalBlackVisible)
+    {
+        <div class="promote-popup-black">
+            <div class="chess-square dark BlackQueen" onclick="@(() => PromotePiece(PromotionSelection.Queen))"></div>
+            <div class="chess-square light BlackRook" onclick="@(() => PromotePiece(PromotionSelection.Rook))"></div>
+            <div class="chess-square dark BlackBishop" onclick="@(() => PromotePiece(PromotionSelection.Bishop))"></div>
+            <div class="chess-square light BlackKnight" onclick="@(() => PromotePiece(PromotionSelection.Knight))"></div>
+        </div>
+    }
+</div>
