@@ -1,36 +1,107 @@
 ﻿
 using Chess.Common;
+using Chess.Models;
 using Microsoft.AspNetCore.Components;
 using System.Diagnostics;
 
 namespace Chess.Controls
 {
-    // TODO: show last move
-    // TODO: Implement UI for timers
-    // TODO: Implement menu to choose time control
     public partial class BoardControlls : ComponentBase
     {
+        public StartGameModel StartGameInput { get; set; } = new();
         public bool PromotionModalWhiteVisible { get; set; } = false;
         public Chessboard Board { get; set; }
         public bool PromotionModalBlackVisible { get; set; } = false;
 
         public bool[,] ValidMoves = new bool[8, 8];
 
+        public int lastMFRow { get; set; } = -1;
+        public int lastMFCol { get; set; } = -1;
+        public int lastMTRow { get; set; } = -1;
+        public int lastMTCol { get; set; } = -1;
+
+        public string WhiteTimer { get; set; }
+        public string BlackTimer { get; set; }
+        public Timer? Timer;
+
         public bool GameOver { get; set; } = false;
         public BoardControlls()
         {
-            NewGame();
+            Board = new(0, 0);
+            Board.gameOver = true;
         }
-        private static void Test(object sender, EventArgs e)
+        public async Task<bool> GameoverAsync()
         {
+            if(Board != null)
+            {
+                if (Board.isGameOver())
+                {
+                    Dispose();
+                    if (Board.GetWhiteTimer() <= 0 || Board.GetBlackTimer() <= 0)
+                        return true;
 
+                    await Task.Delay(3000);
+                    return true;
+                }
+            }
+            return false;
+        }
+        public string GetWhiteTimer()
+        {
+            if(Board != null)
+            {
+                int time = Board.GetWhiteTimer()/10;
+                int mins = time / 60;
+                int secs = time % 60;
+
+                return $"{mins.ToString("D2")}:{secs.ToString("D2")}";
+            }
+            return "00:00";
+
+        }
+        public string GetBlackTimer()
+        {
+            if (Board != null)
+            {
+                int time = Board.GetBlackTimer() / 10;
+                int mins = time / 60;
+                int secs = time % 60;
+
+                return $"{mins.ToString("D2")}:{secs.ToString("D2")}";
+            }
+                
+            return "00:00";
         }
         public void NewGame()
         {
-            Board = new(600, 5);
+            if(StartGameInput.Timer == 0)
+            {
+                StartGameInput.Timer = 600;
+            }
+            Board = new(StartGameInput.Timer, StartGameInput.Increment);
             GameOver = false;
+            parsed = new char[4];
+            _move = string.Empty;
+            lastMFRow = -1;
+            lastMFCol = -1;
+            lastMTRow = -1;
+            lastMTCol = -1;
+            Timer = new Timer((_) =>
+            {
+                InvokeAsync(async () =>
+                {
+                    WhiteTimer = GetWhiteTimer();
+                    BlackTimer = GetBlackTimer();
+                    GameOver = await GameoverAsync();
+                    StateHasChanged();
+                });
+            }, null, 0, 100);
         }
-
+        public void Dispose()
+        {
+            Timer?.Dispose();
+            Timer = null;
+        }
         public bool IsDarkTile(int row, int col)
         {
             return (row + col) % 2 == 1;
@@ -38,11 +109,12 @@ namespace Chess.Controls
         
         public string GetTileClass(int row, int col)
         {
-
+            if (Board == null)
+                return string.Empty;
             string result = string.Empty;
             if (Board.getBoard()[row, col].RightClicked)
             {
-                string tileRightClickClass = IsDarkTile(row, col) ? "tile-rightC-black " : "tile-rightC-white ";
+                string tileRightClickClass = IsDarkTile(row, col) ? "tile -rightC-black " : "tile-rightC-white ";
                 result += tileRightClickClass;
             }
 
@@ -75,6 +147,10 @@ namespace Chess.Controls
                 result += " ";
                 result += "valid-move ";
             }
+            if(Board != null && Board.getBoard()[row, col].getPiece() != null)
+            {
+                result += "take ";
+            }
 
             return result;
         }
@@ -83,7 +159,8 @@ namespace Chess.Controls
         char[] parsed = new char[4];
         public async Task MovePieceAsync(int row, int col)
         {
-
+            if (Board.gameOver)
+                return;
             if (_move.Length == 4)
             { 
                 _move = string.Empty;
@@ -91,18 +168,26 @@ namespace Chess.Controls
             }
             if (string.IsNullOrEmpty(_move))
             {
-                parsed[0] = (char)(col + 'a');
-                parsed[1] = (char)(8 - row + '0');
-                _move = new string(parsed).Trim('\0');
+                FirstClick(row, col);
                 PromotionModalWhiteVisible = false;
                 PromotionModalBlackVisible = false;
 
-                ValidMoves = Board.pieceCanMove(Board.getBoard()[row, col].getPiece());
                 StateHasChanged();
-                // TODO: krugciki kad se klikne na drugu figuru njeni krugciki
             }
             else
             {
+                if (Board.getBoard()[row, col].getPiece() != null && Board.whiteToMove && Board.getBoard()[row,col].getPiece().white)
+                {
+                    FirstClick(row, col);
+                    StateHasChanged();
+                    return;
+                }
+                if (Board.getBoard()[row, col].getPiece() != null && !Board.whiteToMove && !Board.getBoard()[row, col].getPiece().white)
+                {
+                    FirstClick(row, col);
+                    StateHasChanged();
+                    return;
+                }
                 parsed[2] = (char)(col + 'a');
                 parsed[3] = (char)(8 - row + '0');
                 _move = new string(parsed);
@@ -114,17 +199,20 @@ namespace Chess.Controls
                     else
                         PromotionModalBlackVisible = true;
                     StateHasChanged();
-
                     return;
                 }
+                ValidMoves = new bool[8,8];
 
                 if(!Board.move(_move, "Q"))
                 {
                     Console.WriteLine($"Illegal move {_move}");
+                    return;
                 }
-                ValidMoves = new bool[8,8]; 
-                
-                // update frontend 
+                lastMFRow = 8 - (_move[1] - '0');
+                lastMFCol = _move[0] - 'a';
+                lastMTRow = row;
+                lastMTCol = col;
+
                 StateHasChanged();
                 parsed = new char[4]; 
                 _move = string.Empty;
@@ -133,10 +221,23 @@ namespace Chess.Controls
                 {
                     await Task.Delay(3000);
                     GameOver = true;
+                    Dispose();
                     StateHasChanged();
                 }
             }
         }
+
+        private void FirstClick(int row, int col)
+        {
+            if (Board == null)
+                return;
+            parsed[0] = (char)(col + 'a');
+            parsed[1] = (char)(8 - row + '0');
+            _move = new string(parsed).Trim('\0');
+            var piece = Board.getBoard()[row, col].getPiece();
+            ValidMoves = Board.pieceCanMove(piece);
+        }
+
         public void PromotePiece(PromotionSelection piece)
         {
             if (piece == PromotionSelection.Queen)
@@ -158,6 +259,10 @@ namespace Chess.Controls
             PromotionModalWhiteVisible = false;
             PromotionModalBlackVisible = false;
             ValidMoves = new bool[8, 8];
+            lastMFRow = 8 - (_move[1] - '0');
+            lastMFCol = _move[0] - 'a';
+            lastMTRow = 8 - (_move[3] - '0'); ;
+            lastMTCol = _move[2] - 'a';
             StateHasChanged();
             parsed = new char[4];
             _move = string.Empty;
@@ -166,6 +271,19 @@ namespace Chess.Controls
         public void HandleRightClick(int row, int col)
         {
             Board.getBoard()[row, col].RightClicked = !Board.getBoard()[row, col].RightClicked;
+        }
+
+        public string GetLastMoveFrom(int row, int col)
+        {
+            if (row == lastMFRow && col == lastMFCol)
+                return "last-move-from";
+            return string.Empty;
+        }
+        public string GetLastMoveTo(int row, int col)
+        {
+            if (row == lastMTRow && col == lastMTCol)
+                return "last-move-to";
+            return string.Empty;
         }
     }
 }

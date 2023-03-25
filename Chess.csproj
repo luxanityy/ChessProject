@@ -10,4 +10,8 @@
     <None Include="wwwroot\Pieces\White\pawn.png" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="System.Windows.Extensions" Version="7.0.0" />
+  </ItemGroup>
+
 </Project>

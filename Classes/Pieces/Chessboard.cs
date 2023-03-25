@@ -2,6 +2,7 @@
 
 using Chess.Common;
 using Pieces;
+using System.Media;
 using System.Timers;
 
 
@@ -32,7 +33,12 @@ public class Chessboard {
 	private System.Timers.Timer timer;
 	List<Position> positionQ;
 
-	public Chessboard(int initTime, int incrTime) {
+	
+    SoundPlayer regularMoveSound = new SoundPlayer(@"wwwroot/Sounds/move-self.wav");
+    SoundPlayer captureMoveSound = new SoundPlayer(@"wwwroot/Sounds/capture.wav");
+
+
+    public Chessboard(int initTime, int incrTime) {
 		tileMatrix = new ChessTile[8,8];
 		whiteToMove = true;
 		this.gameOver = false;
@@ -108,11 +114,21 @@ public class Chessboard {
         timer = new System.Timers.Timer(100);
         timer.Elapsed += OnTimedEvent;
     }
-
-	void OnTimedEvent(object source, ElapsedEventArgs e)
+	public int GetWhiteTimer()
+	{
+		return whiteTimer;
+	}
+    public int GetBlackTimer()
+    {
+        return blackTimer;
+    }
+    void OnTimedEvent(object source, ElapsedEventArgs e)
 	{
         // Check whose turn it is.
-        Console.WriteLine("Black: " + blackTimer);
+        //Console.WriteLine("Black: " + blackTimer);
+		if(gameOver)
+			timer.Enabled = false;
+
         if (whiteToMove)
 		{
             whiteTimer--;
@@ -333,10 +349,12 @@ public class Chessboard {
 
 		if (isCheck == 0) {
 			if (p2 == null) {
-				// TODO: Sound for regular move
-			} else {
-				// TODO: Sound for capture move
-			}
+				regularMoveSound.Play();
+
+            } else {
+				captureMoveSound.Play();
+
+            }
 		}
 
 		if (whiteToMove)

@@ -1,58 +1,73 @@
 ﻿@page "/"
 @inherits Chess.Controls.BoardControlls
 
-<div class="new-game">
-    <button class="new-game-button" onclick="@(()=>NewGame())">NEW GAME</button>
-</div>
-<div class ="game-over">
-@if (GameOver)
-{
-    <div class="text-placeholder">GAME OVER
-            @if (Board.GetOutcome() == Outcome_e.WIN_C || Board.GetOutcome() == Outcome_e.WIN_TO)
-        {
-            <div class="outcome">WHITE WON</div>
-        }
-        else if(Board.GetOutcome() == Outcome_e.DRAW_3 || Board.GetOutcome() == Outcome_e.DRAW_STALEMATE || 
-                Board.GetOutcome() == Outcome_e.DRAW_INS || Board.GetOutcome() == Outcome_e.DRAW_50)
-        {
-            <div class="outcome">DRAW</div>
-        }
-            else if (Board.GetOutcome() == Outcome_e.LOSE_C || Board.GetOutcome() == Outcome_e.LOSE_TO)
-        {
-                <div class="outcome">BLACK WON</div>
-        }
+<EditForm Model="@StartGameInput" OnSubmit="@NewGame">
+    <div class="form-holder">
+        <div class="form-placeholder">
+            <div class="start-game-inputs">
+                <div class="input-holder"><label class="input-label">Time:</label><InputNumber id="Time" @bind-Value="StartGameInput.Timer" /></div>
+                <div class="input-holder"><label class="input-label">Increment:</label><InputNumber id="Increment" @bind-Value="StartGameInput.Increment" /></div>
+            </div>
+            <button class="form-submit-button" type="submit">New Game</button>
         </div>
-}
-</div>
-<div class="chess-board">
-    @if(PromotionModalWhiteVisible)
+    </div>
+</EditForm>
+
+<div class="game-holder">
+    <div class="chess-board">
+    <div class ="game-over">
+    @if (GameOver)
     {
-        <div class="promote-popup-white">
-            <div class="chess-square dark WhiteQueen" onclick="@(() => PromotePiece(PromotionSelection.Queen))"></div>
-            <div class="chess-square light WhiteRook" onclick="@(() => PromotePiece(PromotionSelection.Rook))"></div>
-            <div class="chess-square dark WhiteBishop" onclick="@(() => PromotePiece(PromotionSelection.Bishop))"></div>
-            <div class="chess-square light WhiteKnight" onclick="@(() => PromotePiece(PromotionSelection.Knight))"></div>
-        </div>
-    }
-    @foreach (var row in Enumerable.Range(0, 8))
-    {
-        <div class="chess-row">
-            
-            @foreach (var col in Enumerable.Range(0, 8))
+        <div class="text-placeholder">GAME OVER
+                @if (Board.GetOutcome() == Outcome_e.WIN_C || Board.GetOutcome() == Outcome_e.WIN_TO)
             {
-                <div class="chess-square @GetTileClass(row,col)" onclick="@(() => MovePieceAsync(row,col))" @oncontextmenu="(()=> HandleRightClick(row,col))" @oncontextmenu:preventDefault="true">
-                    <div class="@GetValidMoves(row,col)"></div>
-                </div>
+                <div class="outcome">WHITE WON</div>
             }
-        </div>
+            else if(Board.GetOutcome() == Outcome_e.DRAW_3 || Board.GetOutcome() == Outcome_e.DRAW_STALEMATE || 
+                    Board.GetOutcome() == Outcome_e.DRAW_INS || Board.GetOutcome() == Outcome_e.DRAW_50)
+            {
+                <div class="outcome">DRAW</div>
+            }
+                else if (Board.GetOutcome() == Outcome_e.LOSE_C || Board.GetOutcome() == Outcome_e.LOSE_TO)
+            {
+                    <div class="outcome">BLACK WON</div>
+            }
+            </div>
     }
-    @if(PromotionModalBlackVisible)
-    {
-        <div class="promote-popup-black">
-            <div class="chess-square dark BlackQueen" onclick="@(() => PromotePiece(PromotionSelection.Queen))"></div>
-            <div class="chess-square light BlackRook" onclick="@(() => PromotePiece(PromotionSelection.Rook))"></div>
-            <div class="chess-square dark BlackBishop" onclick="@(() => PromotePiece(PromotionSelection.Bishop))"></div>
-            <div class="chess-square light BlackKnight" onclick="@(() => PromotePiece(PromotionSelection.Knight))"></div>
-        </div>
-    }
+    </div>
+        @if(PromotionModalWhiteVisible)
+        {
+            <div class="promote-popup-white">
+                <div class="chess-square dark WhiteQueen" onclick="@(() => PromotePiece(PromotionSelection.Queen))"></div>
+                <div class="chess-square light WhiteRook" onclick="@(() => PromotePiece(PromotionSelection.Rook))"></div>
+                <div class="chess-square dark WhiteBishop" onclick="@(() => PromotePiece(PromotionSelection.Bishop))"></div>
+                <div class="chess-square light WhiteKnight" onclick="@(() => PromotePiece(PromotionSelection.Knight))"></div>
+            </div>
+        }
+        @foreach (var row in Enumerable.Range(0, 8))
+        {
+            <div class="chess-row">
+            
+                @foreach (var col in Enumerable.Range(0, 8))
+                {
+                    <div class="chess-square @GetTileClass(row,col) @GetLastMoveTo(row,col) @GetLastMoveFrom(row,col)" onclick="@(() => MovePieceAsync(row,col))" @oncontextmenu="(()=> HandleRightClick(row,col))" @oncontextmenu:preventDefault="true">
+                        <div class="@GetValidMoves(row,col)"></div>
+                    </div>
+                }
+            </div>
+        }
+        @if(PromotionModalBlackVisible)
+        {
+            <div class="promote-popup-black">
+                <div class="chess-square dark BlackQueen" onclick="@(() => PromotePiece(PromotionSelection.Queen))"></div>
+                <div class="chess-square light BlackRook" onclick="@(() => PromotePiece(PromotionSelection.Rook))"></div>
+                <div class="chess-square dark BlackBishop" onclick="@(() => PromotePiece(PromotionSelection.Bishop))"></div>
+                <div class="chess-square light BlackKnight" onclick="@(() => PromotePiece(PromotionSelection.Knight))"></div>
+            </div>
+        }
+    </div>
+    <div class="timers">
+        <div class="black-timer"><div class="timer"><label class="timer-label">@(BlackTimer != null ? BlackTimer : "00:00")</label></div></div>
+        <div class="white-timer"><div class="timer"><label class="timer-label">@(WhiteTimer != null ? WhiteTimer : "00:00")</label></div></div>
+    </div>
 </div>
