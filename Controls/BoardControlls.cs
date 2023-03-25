@@ -3,8 +3,17 @@ using Chess.Common;
 using Chess.Models;
 using Microsoft.AspNetCore.Components;
 using System.Diagnostics;
+using System.Media;
 
 namespace Chess.Controls
+
+// TODO: Da se pojedene figure pokazujev dole koje su i materijal
+// U chessboard ima pieceCounter[10]
+// pieceCounter[0] = beliTop na tablu
+// pieceCounter[1] = beliKonj na tablu
+// pieceCounter[2] = beliLovac na tablu
+// pieceCounter[3] = beliKraljica na tablu
+// pieceCounter[4] = beliPijun na tablu
 {
     public partial class BoardControlls : ComponentBase
     {
@@ -23,6 +32,7 @@ namespace Chess.Controls
         public string WhiteTimer { get; set; }
         public string BlackTimer { get; set; }
         public Timer? Timer;
+        SoundPlayer checkMateSound = new SoundPlayer(@"wwwroot/Sounds/checkmate.wav");
 
         public bool GameOver { get; set; } = false;
         public BoardControlls()
@@ -36,11 +46,12 @@ namespace Chess.Controls
             {
                 if (Board.isGameOver())
                 {
+                    checkMateSound.Play();
                     Dispose();
                     if (Board.GetWhiteTimer() <= 0 || Board.GetBlackTimer() <= 0)
                         return true;
 
-                    await Task.Delay(3000);
+                    await Task.Delay(200);
                     return true;
                 }
             }

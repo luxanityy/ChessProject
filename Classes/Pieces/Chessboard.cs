@@ -36,7 +36,7 @@ public class Chessboard {
 	
     SoundPlayer regularMoveSound = new SoundPlayer(@"wwwroot/Sounds/move-self.wav");
     SoundPlayer captureMoveSound = new SoundPlayer(@"wwwroot/Sounds/capture.wav");
-
+    SoundPlayer checkSound = new SoundPlayer(@"wwwroot/Sounds/check.wav");
 
     public Chessboard(int initTime, int incrTime) {
 		tileMatrix = new ChessTile[8,8];
@@ -295,7 +295,7 @@ public class Chessboard {
 				}
 			}
 
-			// TODO: Sound for check move
+			checkSound.Play();
 		}
 
 		// Check for stalemate
